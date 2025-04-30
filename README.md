@@ -24,7 +24,7 @@ A comprehensive real estate analysis dashboard that helps users compare buying v
 
 ## Deployment
 
-The app is deployed on Streamlit Cloud and can be accessed at: [https://your-app-url.streamlit.app](https://your-app-url.streamlit.app)
+The app is deployed on Streamlit Cloud and can be accessed at: https://househunters-spmyheo3luqekej2nnwb2e.streamlit.app/
 
 ## Data Requirements
 
