@@ -1013,8 +1013,46 @@ elif page == "Predictions":
                 with col3:
                     st.metric("Maximum Price", f"${int(max_pred):,}")
                 
-                # Show price distribution chart
+                # Get detailed statistics about the properties
+                property_stats = city_data[features].describe().round(1)
+                
+                # Create a table showing property characteristics
+                st.subheader("Property Characteristics")
+                
+                # Create the DataFrame with proper alignment
+                stats_df = pd.DataFrame({
+                    'Metric': ['Mean', 'Standard Deviation', 'Minimum', '25%', '50%', '75%', 'Maximum'],
+                    'Bedrooms': property_stats['BEDS'].iloc[1:].values,
+                    'Bathrooms': property_stats['BATHS'].iloc[1:].values,
+                    'Square Feet': property_stats['SQUARE_FEET'].iloc[1:].values
+                })
+                
+                st.dataframe(
+                    stats_df,
+                    column_config={
+                        'Bedrooms': st.column_config.NumberColumn(
+                            "Bedrooms",
+                            format="%.1f",
+                            width='medium'
+                        ),
+                        'Bathrooms': st.column_config.NumberColumn(
+                            "Bathrooms",
+                            format="%.1f",
+                            width='medium'
+                        ),
+                        'Square Feet': st.column_config.NumberColumn(
+                            "Square Feet",
+                            format="%.0f",
+                            width='medium'
+                        )
+                    },
+                    hide_index=True
+                )
+                
+                # Show price distribution
                 st.subheader("Price Distribution")
+                
+                # Create price distribution chart
                 price_dist = pd.DataFrame({
                     'Price': y_pred,
                     'Type': property_type
@@ -1031,11 +1069,69 @@ elif page == "Predictions":
                 
                 st.altair_chart(chart, use_container_width=True)
                 
+                # Show price distribution by bedrooms
+                st.subheader("Price Distribution by Bedrooms")
+                
+                # Create a simple grouped bar chart
+                bedroom_prices = city_data.groupby('BEDS', observed=True)[target].mean().reset_index()
+                
+                chart = alt.Chart(bedroom_prices).mark_bar().encode(
+                    alt.X('BEDS:O', title="Number of Bedrooms"),
+                    alt.Y(target, title="Average Price"),
+                    color=alt.Color('BEDS:O', scale=alt.Scale(scheme='category10'))
+                ).properties(
+                    width=600,
+                    height=400
+                )
+                
+                st.altair_chart(chart, use_container_width=True)
+                
+                # Show price distribution by bathrooms
+                st.subheader("Price Distribution by Bathrooms")
+                
+                # Create a simple grouped bar chart
+                bathroom_prices = city_data.groupby('BATHS', observed=True)[target].mean().reset_index()
+                
+                chart = alt.Chart(bathroom_prices).mark_bar().encode(
+                    alt.X('BATHS:O', title="Number of Bathrooms"),
+                    alt.Y(target, title="Average Price"),
+                    color=alt.Color('BATHS:O', scale=alt.Scale(scheme='category10'))
+                ).properties(
+                    width=600,
+                    height=400
+                )
+                
+                st.altair_chart(chart, use_container_width=True)
+                
+                # Show price vs square footage
+                st.subheader("Price vs Square Footage")
+                
+                chart = alt.Chart(city_data).mark_circle(size=60, opacity=0.4).encode(
+                    alt.X('SQUARE_FEET:Q', title="Square Footage"),
+                    alt.Y(target, title="Price"),
+                    tooltip=['BEDS', 'BATHS', 'SQUARE_FEET', target]
+                ).properties(
+                    width=600,
+                    height=400
+                )
+                
+                st.altair_chart(chart, use_container_width=True)
+                
                 # Add interpretation
-                st.subheader("Interpretation")
+                st.subheader("Detailed Insights")
                 st.write(f"The model predicts that in {selected_city}, the typical {property_type.lower()} price is around ${int(avg_pred):,}.")
                 st.write(f"Prices can range from ${int(min_pred):,} to ${int(max_pred):,}, depending on property characteristics.")
                 st.write("These predictions are based on recent market data and similar properties.")
+                
+                # Add property characteristics interpretation
+                st.write("\nProperty Characteristics:")
+                st.write(f"- Average number of bedrooms: {property_stats.loc['mean', 'BEDS']:.1f}")
+                st.write(f"- Average number of bathrooms: {property_stats.loc['mean', 'BATHS']:.1f}")
+                st.write(f"- Average square footage: {property_stats.loc['mean', 'SQUARE_FEET']:.0f} sq ft")
+                st.write("\nPrice Trends:")
+                st.write("- Larger properties (more bedrooms/bathrooms) tend to have higher prices")
+                st.write("- There's a positive correlation between square footage and price")
+                st.write("- The distribution shows a range of property sizes and prices in the market")
 
 elif page == "About":
     st.title("About")
